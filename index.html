@@ -278,6 +278,9 @@ label.chk input{width:16px;height:16px;accent-color:var(--accent)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -369,8 +372,8 @@ function errMsg(e){
   if(c==='quota_exceeded')return 'Depolama alanı doldu. Eski kayıtları silip yeniden dene.';
   if(c==='invalid_argument')return 'Bu bağlantıda kayıt yapma iznin yok ya da kayıt çok büyük.';
   if(c==='revoked')return 'Bu sayfaya erişimin kapatıldı.';
-  if(c==='conflict')return 'Bu planı başka bir cihazdan da değiştirdin. Son değişikliğini kopyala, sayfayı yenile ve tekrar yap.';
-  if(c==='signedout')return 'Oturumun sona erdi. Sayfayı yenileyip yeniden giriş yap.';
+  if(c==='permission-denied')return 'Bu hesapla veriye erişim yok. E-postanı doğruladığından emin ol.';
+  if(c==='invalid-argument')return 'Kayıt geçersiz ya da çok büyük.';
   return 'Bağlantı sorunu. Yazdıkların burada duruyor; yeniden deneyebilirsin.';
 }
 async function run(fn,onOk){
@@ -569,7 +572,8 @@ function render(){
   try{if(ak&&typeof a.selectionStart==='number')selr=[a.selectionStart,a.selectionEnd]}catch(e){}
   var m=q('.main'),st=m?m.scrollTop:0,ws=window.scrollY;
   if(S.phase==='connecting'){app.innerHTML='<div class="loading" style="grid-column:1/-1">Bağlanılıyor…</div>';return}
-  if(S.phase==='auth'){app.style.display='block';app.innerHTML=S.pendingCode?codeHTML():authHTML();return}
+  if(S.phase==='auth'){app.style.display='block';app.innerHTML=authHTML();return}
+  if(S.phase==='verify'){app.style.display='block';app.innerHTML=verifyHTML();return}
   if(S.phase==='offline'){app.style.display='block';app.innerHTML=gate('Sunucuya bağlanılamadı','<p class="muted">'+esc(S.offlineErr||'İnternet bağlantını kontrol edip tekrar dene.')+'</p><div class="frow"><button class="btn" data-act="retry-open">Yeniden dene</button></div>');return}
   if(S.phase==='nodb'){app.style.display='block';app.innerHTML=gate('Planına bağlanılamadı','<p>Plandan kayıtlarını hesabında saklar. Bunun için sayfayı claude.ai üzerinden, giriş yapmış olarak aç.</p><p>Bağlantı bir başkasından geldiyse, sahibinden sana erişim vermesini iste.</p>');return}
   if(S.phase==='signedout'){app.style.display='block';app.innerHTML=gate('Giriş yapman gerekiyor','<p>Planın kendi hesabına bağlı tutulur, böylece yalnızca sen görürsün ve her cihazdan ulaşırsın.</p><p>claude.ai hesabınla giriş yapıp bu bağlantıyı yeniden aç.</p>');return}
@@ -987,30 +991,67 @@ var A={
   'shot-open':function(){if(!S.shotOK){toast('Bu sayfada görselden ekleme kullanılamıyor.');return}openShot()},
   'retry':function(){var f=S.failed;if(f){S.failed=null;run(f.fn,f.onOk)}},
   'resync':function(){subscribe();render()},
-  'auth-mode':function(el){S.authMode=el.dataset.mode;S.authErr='';S.authKeep={};render()},
+  'auth-mode':function(el){S.authMode=el.dataset.mode;S.authErr='';S.authInfo='';render()},
   'auth-submit':async function(){
+    if(!fbInit()){S.authErr=fbConfigOk()?'Hesap sistemi yüklenemedi. Sayfayı yenile.':'Firebase ayarları henüz girilmedi.';render();return}
     var m=S.authMode||'login';
-    var u=(K('au-user')||{}).value||'',p=(K('au-pass')||{}).value||'',p2=(K('au-pass2')||{}).value||'',c=(K('au-code')||{}).value||'';
-    S.authKeep={u:u,c:c};
-    if(!u.trim()){S.authErr='Kullanıcı adını yaz.';render();return}
-    if(m==='register'&&p!==p2){S.authErr='İki şifre aynı değil.';render();return}
+    var e=((K('au-email')||{}).value||'').trim(),p=(K('au-pass')||{}).value||'',p2=(K('au-pass2')||{}).value||'';
+    S.authKeep={e:e};S.authInfo='';
+    if(!e){S.authErr='E-posta adresini yaz.';render();return}
+    if(m==='reset'){
+      S.authBusy=true;S.authErr='';render();
+      try{await fbAuth.sendPasswordResetEmail(e);S.authMode='login';S.authInfo='Şifre sıfırlama bağlantısı gönderildi. Gelen kutunu ve spam klasörünü kontrol et.'}
+      catch(err){S.authErr=authErrMsg(err)}
+      S.authBusy=false;render();return;
+    }
+    if(m==='register'){
+      if(p.length<8){S.authErr='Şifre en az 8 karakter olmalı.';render();return}
+      if(p!==p2){S.authErr='İki şifre aynı değil.';render();return}
+    }
     S.authBusy=true;S.authErr='';render();
     try{
-      var j;
-      if(m==='login')j=await authCall({action:'login',username:u,password:p});
-      else if(m==='register')j=await authCall({action:'register',username:u,password:p});
-      else j=await authCall({action:'reset',username:u,recoveryCode:c,newPassword:p});
-      S.authBusy=false;S.authKeep={};
-      setToken(j.token);
-      if(j.recoveryCode){setPending(j.recoveryCode);S.pendingCode=j.recoveryCode;render();return}
-      await enterAccount();
-    }catch(e){S.authBusy=false;S.authErr=(e&&e.message)||'Bir sorun oldu, tekrar dene.';render()}
+      if(m==='register'){
+        var cred=await fbAuth.createUserWithEmailAndPassword(e,p);
+        await cred.user.sendEmailVerification();
+      }else{
+        await fbAuth.signInWithEmailAndPassword(e,p);
+      }
+      S.authKeep={};
+    }catch(err){S.authErr=authErrMsg(err)}
+    S.authBusy=false;
+    if(S.authErr)render();
   },
-  'auth-continue':async function(){setPending('');S.pendingCode=null;await enterAccount()},
-  'retry-open':async function(){S.offlineErr='';await enterAccount()},
+  'auth-google':async function(){
+    if(!fbInit()){S.authErr='Hesap sistemi yüklenemedi. Sayfayı yenile.';render();return}
+    S.authBusy=true;S.authErr='';render();
+    try{await fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}
+    catch(err){S.authErr=authErrMsg(err)}
+    S.authBusy=false;
+    if(S.authErr)render();
+  },
+  'verify-check':async function(){
+    var u=fbAuth&&fbAuth.currentUser;
+    if(!u){S.phase='auth';render();return}
+    S.authBusy=true;S.verifyErr='';S.verifyInfo='';render();
+    try{await u.reload();await u.getIdToken(true)}catch(err){S.verifyErr=authErrMsg(err)}
+    S.authBusy=false;
+    var now=fbAuth.currentUser;
+    if(now&&now.emailVerified){await enterAccount(now)}
+    else{if(!S.verifyErr)S.verifyErr='Henüz doğrulanmamış. Gelen kutundaki bağlantıya tıkladığından emin ol.';render()}
+  },
+  'verify-resend':async function(){
+    var u=fbAuth&&fbAuth.currentUser;if(!u)return;
+    S.verifyErr='';S.verifyInfo='';
+    try{await u.sendEmailVerification();S.verifyInfo='Yeni doğrulama e-postası gönderildi.'}catch(err){S.verifyErr=authErrMsg(err)}
+    render();
+  },
+  'retry-open':async function(){
+    var u=fbAuth&&fbAuth.currentUser;
+    if(u&&u.emailVerified){await enterAccount(u)}else{location.reload()}
+  },
   'logout':async function(){
-    try{await fetch(API.auth,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+getToken()},body:JSON.stringify({action:'logout'})})}catch(e){}
-    setToken('');setPending('');location.reload();
+    try{if(fbAuth)await fbAuth.signOut()}catch(e){}
+    location.reload();
   }
 };
 document.addEventListener('click',function(e){
@@ -1030,115 +1071,129 @@ window.addEventListener('beforeunload',function(e){if(S.dirty||S.failed){e.preve
 var lastDay=today();
 setInterval(function(){var t=today();if(t!==lastDay){lastDay=t;render()}},60000);
 
-/* ---------- hesap ve sunucu verisi ---------- */
-var API={auth:'/.netlify/functions/auth',data:'/.netlify/functions/data'};
-function getToken(){try{return localStorage.getItem('planda:session')||''}catch(e){return ''}}
-function setToken(t){try{if(t)localStorage.setItem('planda:session',t);else localStorage.removeItem('planda:session')}catch(e){}}
-function getPending(){try{return localStorage.getItem('planda:pendingcode')||''}catch(e){return ''}}
-function setPending(c){try{if(c)localStorage.setItem('planda:pendingcode',c);else localStorage.removeItem('planda:pendingcode')}catch(e){}}
+/* ---------- hesap (Firebase) ---------- */
+/* Aşağıdaki bilgileri Firebase konsolundan kopyalayıp yapıştır. Bunlar herkese açık bilgilerdir. */
+var FIREBASE_CONFIG={apiKey:'AIzaSyBDJUmj1UHpnrwnqN6vrC7i606pDmcoaD0',authDomain:'plandan-7ddce.firebaseapp.com',projectId:'plandan-7ddce',storageBucket:'plandan-7ddce.firebasestorage.app',messagingSenderId:'79185282612',appId:'1:79185282612:web:7a84c38627b358d7426c61'};
+var fbAuth=null,fbDb=null,openUid=null;
+function fbConfigOk(){return !!FIREBASE_CONFIG.apiKey&&FIREBASE_CONFIG.apiKey.indexOf('BURAYA')!==0}
+function fbInit(){
+  if(fbAuth)return true;
+  try{
+    if(!window.firebase||!firebase.initializeApp||!fbConfigOk())return false;
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth=firebase.auth();fbAuth.languageCode='tr';
+    fbDb=firebase.firestore();
+    try{fbDb.enablePersistence({synchronizeTabs:true}).catch(function(){})}catch(e){}
+    return true;
+  }catch(e){return false}
+}
 function legacyData(){var out={};COLS.forEach(function(c){try{out[c]=JSON.parse(localStorage.getItem('planda:v1:'+c)||'{}')||{}}catch(e){out[c]={}}});return out}
-async function api(url,opts){
-  opts=opts||{};
-  var h={'content-type':'application/json'},t=getToken();
-  if(t)h.authorization='Bearer '+t;
-  var r;
-  try{r=await fetch(url,{method:opts.method||'GET',headers:h,body:opts.body})}catch(e){throw {code:'unavailable'}}
-  var j={};try{j=await r.json()}catch(e){}
-  if(r.status===401)throw {code:'signedout'};
-  if(r.status===409)throw {code:'conflict'};
-  if(r.status===413)throw {code:'invalid_argument'};
-  if(r.status>=500)throw {code:'unavailable'};
-  if(!r.ok)throw {code:'http',message:j.error||''};
-  return j;
+/* Firestore'u, yerel depolamayla aynı arayüzle sarar. Her kullanıcı yalnızca kendi verisine erişir. */
+function fireBase(uid){
+  var root=fbDb.collection('users').doc(uid);
+  function clean(d){return JSON.parse(JSON.stringify(d))}
+  return {
+    collection:function(c){
+      var ref=root.collection(c);
+      return {
+        path:c,
+        doc:function(id){
+          var dr=id?ref.doc(id):ref.doc();
+          return {
+            id:dr.id,path:dr.path,
+            set:function(d){return dr.set(clean(d))},
+            update:function(d){return dr.update(clean(d))},
+            delete:function(){return dr.delete()}
+          };
+        },
+        onSnapshot:function(next,err){return ref.onSnapshot(next,err)}
+      };
+    }
+  };
 }
-async function authCall(body){
-  var r;
-  try{r=await fetch(API.auth,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})}catch(e){throw {message:'Bağlantı yok. Tekrar dene.'}}
-  var j={};try{j=await r.json()}catch(e){}
-  if(!r.ok)throw {message:j.error||'Bir sorun oldu, tekrar dene.'};
-  return j;
+async function importLegacy(root,legacy){
+  var ops=[];
+  COLS.forEach(function(c){Object.keys(legacy[c]||{}).forEach(function(id){ops.push({ref:root.collection(c).doc(id),data:JSON.parse(JSON.stringify(legacy[c][id]))})})});
+  for(var i=0;i<ops.length;i+=400){
+    var b=fbDb.batch();
+    ops.slice(i,i+400).forEach(function(o){b.set(o.ref,o.data)});
+    await b.commit();
+  }
 }
-/* Sunucudaki plan, yerel depolamayla aynı arayüzle (collection/doc) kullanılır.
-   Her yazmadan sonra tüm plan sunucuya gönderilir; çakışma olursa kayıt reddedilir. */
-function remoteBase(initRev,initData){
-  var mem={},rev=initRev,queue=Promise.resolve(),subs={};
-  COLS.forEach(function(c){mem[c]=JSON.parse(JSON.stringify((initData&&initData[c])||{}))});
-  function persist(){
-    var p=queue.catch(function(){}).then(function(){
-      return api(API.data,{method:'PUT',body:JSON.stringify({baseRev:rev,data:mem})}).then(function(j){rev=j.rev});
-    });
-    queue=p;return p;
-  }
-  function emitTo(c,fn){
-    var o=mem[c]||{},docs=Object.keys(o).map(function(id){var body=o[id];return {id:id,exists:true,data:function(){return JSON.parse(JSON.stringify(body))}}});
-    fn({docs:docs,size:docs.length,empty:!docs.length,docChanges:function(){return []},metadata:{fromCache:false,hasPendingWrites:false}});
-  }
-  function emitAll(c){(subs[c]||[]).forEach(function(f){emitTo(c,f)})}
-  function colRef(c){
-    return {
-      path:c,
-      doc:function(id){
-        id=id||('l'+Date.now().toString(36)+Math.random().toString(36).slice(2,8));
-        return {
-          id:id,path:c+'/'+id,
-          set:async function(d){mem[c][id]=JSON.parse(JSON.stringify(d));emitAll(c);await persist()},
-          update:async function(d){if(!mem[c][id])throw {code:'invalid_argument',message:'missing'};Object.assign(mem[c][id],JSON.parse(JSON.stringify(d)));emitAll(c);await persist()},
-          delete:async function(){delete mem[c][id];emitAll(c);await persist()}
-        };
-      },
-      onSnapshot:function(next){
-        subs[c]=subs[c]||[];subs[c].push(next);emitTo(c,next);
-        return function(){subs[c]=(subs[c]||[]).filter(function(f){return f!==next})};
-      }
-    };
-  }
-  return {collection:colRef,persistNow:persist};
-}
-async function openRemote(){
+async function enterAccount(user){
+  openUid=user.uid;
   S.phase='connecting';render();
   try{
-    var j=await api(API.data,{method:'GET'});
-    var data=j.data||{},rev=j.rev||0;
-    var hasRemote=COLS.some(function(c){return data[c]&&Object.keys(data[c]).length});
+    var root=fbDb.collection('users').doc(user.uid);
+    var snaps=await Promise.all(COLS.map(function(c){return root.collection(c).get()}));
+    var empty=snaps.every(function(s){return s.empty});
     var legacy=legacyData();
     var hasLegacy=COLS.some(function(c){return Object.keys(legacy[c]).length});
-    var migrate=!hasRemote&&hasLegacy&&rev===0;
-    base=remoteBase(rev,migrate?legacy:data);
-    S.mode='account';
-    if(migrate)await base.persistNow();
-    return true;
+    var flag='planda:migrated:'+user.uid;
+    var migrated=false;try{migrated=!!localStorage.getItem(flag)}catch(e){}
+    if(empty&&hasLegacy&&!migrated){
+      await importLegacy(root,legacy);
+      try{localStorage.setItem(flag,'1')}catch(e){}
+    }
+    base=fireBase(user.uid);S.mode='account';
   }catch(e){
-    base=null;
-    if(e&&e.code==='signedout'){setToken('');S.phase='auth';S.authErr='Oturumun sona ermiş. Yeniden giriş yap.';render();return false}
-    S.phase='offline';S.offlineErr='Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';render();return false;
+    base=null;openUid=null;
+    S.phase='offline';S.offlineErr=fbErrMsg(e);render();return;
   }
-}
-async function enterAccount(){
-  if(!(await openRemote()))return;
   S.phase='loading';render();subscribe();
+}
+function watchAuth(){
+  fbAuth.onAuthStateChanged(function(user){
+    if(!user){base=null;openUid=null;S.phase='auth';S.authBusy=false;render();return}
+    if(!user.emailVerified){base=null;openUid=null;S.phase='verify';S.verifyEmail=user.email||'';render();return}
+    if(openUid===user.uid&&base)return;
+    enterAccount(user);
+  });
+}
+function authErrMsg(e){
+  var c=(e&&e.code)||'';
+  var map={
+    'auth/invalid-email':'E-posta adresi geçersiz.',
+    'auth/missing-password':'Şifreni yaz.',
+    'auth/weak-password':'Şifre çok zayıf. Daha uzun bir şifre seç.',
+    'auth/email-already-in-use':'Bu e-posta ile zaten bir hesap var. Giriş yap sekmesini kullan.',
+    'auth/invalid-credential':'E-posta ya da şifre hatalı.',
+    'auth/wrong-password':'E-posta ya da şifre hatalı.',
+    'auth/user-not-found':'E-posta ya da şifre hatalı.',
+    'auth/too-many-requests':'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.',
+    'auth/network-request-failed':'Bağlantı yok. İnternetini kontrol et.',
+    'auth/popup-closed-by-user':'Google penceresi kapatıldı.',
+    'auth/unauthorized-domain':'Bu alan adı Firebase ayarlarında yetkili değil. Authorized domains listesine ekle.'
+  };
+  return map[c]||'Bir sorun oldu, tekrar dene.';
+}
+function fbErrMsg(e){
+  var c=(e&&e.code)||'';
+  if(c==='permission-denied')return 'Bu hesapla veriye erişim yok. E-postanı doğruladığından emin ol.';
+  if(c==='unavailable'||c==='auth/network-request-failed')return 'Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';
+  if(c==='resource-exhausted')return 'Günlük kullanım sınırına ulaşıldı. Yarın tekrar dene.';
+  return 'Bir sorun oldu, tekrar dene.';
 }
 var AUTH_TABS=[['login','Giriş yap'],['register','Kayıt ol'],['reset','Şifremi unuttum']];
 function authHTML(){
   var m=S.authMode||'login',keep=S.authKeep||{};
   var tabs='<div class="tabs" style="margin-bottom:14px">'+AUTH_TABS.map(function(t){return '<button class="tab'+(m===t[0]?' on':'')+'" data-act="auth-mode" data-mode="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
-  var f='<label>Kullanıcı adı<input type="text" data-k="au-user" value="'+esc(keep.u||'')+'" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20"></label>';
-  if(m==='reset'){
-    f+='<label>Kurtarma kodu<input type="text" data-k="au-code" value="'+esc(keep.c||'')+'" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX"></label>';
-    f+='<label>Yeni şifre<input type="password" data-k="au-pass" autocomplete="new-password" data-enter="auth-submit"></label>';
-  }else{
-    f+='<label>Şifre<input type="password" data-k="au-pass" autocomplete="'+(m==='register'?'new-password':'current-password')+'" data-enter="auth-submit"></label>';
-    if(m==='register')f+='<label>Şifre tekrar<input type="password" data-k="au-pass2" autocomplete="new-password" data-enter="auth-submit"></label>';
-  }
-  var btn={login:'Giriş yap',register:'Hesap oluştur',reset:'Şifreyi yenile'}[m];
-  var note=m==='reset'
-    ?'<p class="muted">Kayıt olurken sana verilen kurtarma kodunu gir. Yeni şifren hemen geçerli olur.</p>'
-    :'<p class="muted">Verilerin sunucuda, hesabına bağlı olarak saklanır. Şifren saklanmaz, ama sunucunun sahibi teknik olarak verileri okuyabilir.</p>';
-  return gate('Planına giriş',tabs+note+f+(S.authErr?'<p class="ferr" role="alert">'+esc(S.authErr)+'</p>':'')+'<div class="frow"><button class="btn" data-act="auth-submit"'+(S.authBusy?' disabled':'')+'>'+btn+'</button></div>');
+  var f='<label>E-posta<input type="email" data-k="au-email" value="'+esc(keep.e||'')+'" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false"'+(m==='reset'?' data-enter="auth-submit"':'')+'></label>';
+  if(m!=='reset')f+='<label>Şifre<input type="password" data-k="au-pass" autocomplete="'+(m==='register'?'new-password':'current-password')+'" data-enter="auth-submit"></label>';
+  if(m==='register')f+='<label>Şifre tekrar<input type="password" data-k="au-pass2" autocomplete="new-password" data-enter="auth-submit"></label>';
+  var btn={login:'Giriş yap',register:'Hesap oluştur',reset:'Bağlantı gönder'}[m];
+  var note={login:'',register:'<p class="muted">Kayıt olunca e-postana bir doğrulama bağlantısı gelecek. Ona tıklamadan giriş yapamazsın. Verilerin hesabına bağlı olarak saklanır, proje sahibi teknik olarak erişebilir.</p>',reset:'<p class="muted">E-postana şifreni yenileyeceğin bir bağlantı göndereceğiz.</p>'}[m];
+  var err=S.authErr?'<p class="ferr" role="alert">'+esc(S.authErr)+'</p>':'';
+  var info=S.authInfo?'<p class="muted" role="status">'+esc(S.authInfo)+'</p>':'';
+  var main='<div class="frow"><button class="btn" data-act="auth-submit"'+(S.authBusy?' disabled':'')+'>'+btn+'</button></div>';
+  var google=m==='reset'?'':'<div class="frow"><button class="btn ghost" data-act="auth-google"'+(S.authBusy?' disabled':'')+'>Google ile devam et</button></div>';
+  return gate('Planına giriş',tabs+note+f+err+info+main+google);
 }
-function codeHTML(){
-  return gate('Kurtarma kodun','<p>Bu kodu bir yere kaydet. Şifreni unutursan yeni şifre belirlemek için bu kod gerekir. Kodu bir kez kaydedip "devam et" dersen bir daha gösterilmez.</p>'+
-    '<p style="font:600 20px ui-monospace,Menlo,monospace;letter-spacing:.06em;user-select:all;margin:14px 0">'+esc(S.pendingCode)+'</p>'+
-    '<div class="frow"><button class="btn" data-act="auth-continue">Kaydettim, devam et</button></div>');
+function verifyHTML(){
+  return gate('E-postanı doğrula','<p>'+esc(S.verifyEmail||'')+' adresine bir doğrulama bağlantısı gönderdik. Bağlantıya tıkla, sonra aşağıdaki düğmeye bas.</p>'+
+    (S.verifyErr?'<p class="ferr" role="alert">'+esc(S.verifyErr)+'</p>':'')+
+    (S.verifyInfo?'<p class="muted" role="status">'+esc(S.verifyInfo)+'</p>':'')+
+    '<div class="frow"><button class="btn" data-act="verify-check"'+(S.authBusy?' disabled':'')+'>Doğruladım, devam et</button><button class="btn ghost" data-act="verify-resend">Tekrar gönder</button><button class="btn ghost" data-act="logout">Başka hesapla gir</button></div>');
 }
 
 /* ---------- başlat ---------- */
@@ -1154,9 +1209,9 @@ function codeHTML(){
     if(uid&&can!==false){db=d;base=db.doc('data/users/'+uid+'/planda');S.mode='cloud'}
   }
   if(!base){
-    if(!getToken()){S.phase='auth';render();return}
-    if(getPending()){S.pendingCode=getPending();S.phase='auth';render();return}
-    if(!(await openRemote()))return;
+    if(!fbInit()){S.phase='offline';S.offlineErr=fbConfigOk()?'Hesap sistemi yüklenemedi. Sayfayı yenile.':'Firebase ayarları henüz girilmedi.';render();return}
+    watchAuth();
+    return;
   }
   S.phase='loading';render();
   subscribe();
