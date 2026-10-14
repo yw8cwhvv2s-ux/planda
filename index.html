@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>planda · kişisel planlayıcı</title>
+<title>plandan · kişisel planlayıcı</title>
 <meta name="description" content="Günlük, haftalık ve aylık planın, ders programın, fikirlerin ve notların tek yerde.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -440,7 +440,7 @@ function sideHTML(){
   var navB=function(k){return '<button class="'+(S.view===k?'on':'')+'" data-act="nav" data-view="'+k+'"'+(S.view===k?' aria-current="page"':'')+'>'+TITLES[k]+'</button>'};
   var nav=['day','week'].map(navB).join('');
   var nav2=['month','courses','ideas','notebooks'].map(navB).join('');
-  return '<aside class="side"><div class="brand"><span class="logo">planda<i></i></span></div><nav class="nav" aria-label="Ana bölümler">'+nav+'</nav>'+
+  return '<aside class="side"><div class="brand"><span class="logo">plandan<i></i></span></div><nav class="nav" aria-label="Ana bölümler">'+nav+'</nav>'+
     '<div class="wk"><div class="wk-head"><button data-act="week-prev" aria-label="Önceki hafta">‹</button><span>'+rangeLabel(S.week)+'</span><button data-act="week-next" aria-label="Sonraki hafta">›</button></div>'+
     '<div class="wk-days">'+days+'</div>'+(S.week!==monday(t)?'<button class="wk-this" data-act="week-this">Bu haftaya dön</button>':'')+'</div><nav class="nav" aria-label="Diğer bölümler">'+nav2+'</nav></aside>';
 }
@@ -552,7 +552,7 @@ function notebooksV(){
 }
 function fmtTime(t){if(!t)return '';var d=new Date(t);return d.getDate()+' '+MSHORT[d.getMonth()]+' '+d.getFullYear()+', '+pad(d.getHours())+':'+pad(d.getMinutes())}
 
-function gate(title,text){return '<div class="center"><div class="gate"><span class="logo">planda<i></i></span><h2>'+title+'</h2>'+text+'</div></div>'}
+function gate(title,text){return '<div class="center"><div class="gate"><span class="logo">plandan<i></i></span><h2>'+title+'</h2>'+text+'</div></div>'}
 
 function render(){
   var keep={},a=document.activeElement,ak=a&&a.dataset?a.dataset.k:null,selr=null;
@@ -560,7 +560,7 @@ function render(){
   try{if(ak&&typeof a.selectionStart==='number')selr=[a.selectionStart,a.selectionEnd]}catch(e){}
   var m=q('.main'),st=m?m.scrollTop:0,ws=window.scrollY;
   if(S.phase==='connecting'){app.innerHTML='<div class="loading" style="grid-column:1/-1">Bağlanılıyor…</div>';return}
-  if(S.phase==='nodb'){app.style.display='block';app.innerHTML=gate('Planına bağlanılamadı','<p>Planda kayıtlarını hesabında saklar. Bunun için sayfayı claude.ai üzerinden, giriş yapmış olarak aç.</p><p>Bağlantı bir başkasından geldiyse, sahibinden sana erişim vermesini iste.</p>');return}
+  if(S.phase==='nodb'){app.style.display='block';app.innerHTML=gate('Planına bağlanılamadı','<p>Plandan kayıtlarını hesabında saklar. Bunun için sayfayı claude.ai üzerinden, giriş yapmış olarak aç.</p><p>Bağlantı bir başkasından geldiyse, sahibinden sana erişim vermesini iste.</p>');return}
   if(S.phase==='signedout'){app.style.display='block';app.innerHTML=gate('Giriş yapman gerekiyor','<p>Planın kendi hesabına bağlı tutulur, böylece yalnızca sen görürsün ve her cihazdan ulaşırsın.</p><p>claude.ai hesabınla giriş yapıp bu bağlantıyı yeniden aç.</p>');return}
   if(S.phase==='revoked'){app.style.display='block';app.innerHTML=gate('Erişim kapandı','<p>Bu sayfaya erişimin değişti. Sayfanın sahibiyle iletişime geç.</p>');return}
   if(S.phase==='ready'&&lockDoc()&&!S.unlocked){app.style.display='';app.innerHTML=gate('Planın kilitli','<p class="muted">Devam etmek için şifreni gir.</p><label>Şifre<input type="password" data-k="lock-pw" data-enter="lock-open" autocomplete="current-password"></label>'+(S.lockErr?'<p class="ferr" role="alert">'+esc(S.lockErr)+'</p>':'')+'<div class="frow"><button class="btn" data-act="lock-open">Aç</button></div>');var li=K('lock-pw');if(li)li.focus();return}
@@ -591,7 +591,7 @@ function miniListHTML(){
   var list=starredSoon(),h='',last='';
   if(!list.length)return '<p class="empty">Önümüzdeki 14 günde yıldızlı ve bekleyen işin yok.</p>';
   list.forEach(function(x){if(x.date!==last){h+='<li class="mday" style="cursor:default;border:0;padding:0">'+relDay(x.date)+'</li>';last=x.date}
-    h+='<li data-date="'+x.date+'" tabindex="0" title="Planda aç"><span class="tag t-'+esc(x.type)+'">'+(TYPES[x.type]||'Not')+'</span> '+esc(x.text)+'</li>'});
+    h+='<li data-date="'+x.date+'" tabindex="0" title="Plandan\'da aç"><span class="tag t-'+esc(x.type)+'">'+(TYPES[x.type]||'Not')+'</span> '+esc(x.text)+'</li>'});
   return '<ul class="mini-list">'+h+'</ul>';
 }
 var MINI_CSS='*{box-sizing:border-box}body{margin:0;font:14px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;background:#F7F9FC;color:#1A2438}'+
@@ -609,7 +609,7 @@ function renderMini(){
     var list=starredSoon(),h='',last='';
     if(!list.length)h='<p class="empty">Önümüzdeki 14 günde yıldızlı ve bekleyen işin yok.</p>';
     else{h='<ul>';list.forEach(function(x){if(x.date!==last){h+='<li class="day">'+relDay(x.date)+'</li>';last=x.date}
-      h+='<li class="it" data-date="'+x.date+'" title="Planda aç"><span class="tag">'+(TYPES[x.type]||'Not')+'</span>'+esc(x.text)+'</li>'});h+='</ul>'}
+      h+='<li class="it" data-date="'+x.date+'" title="Plandan\'da aç"><span class="tag">'+(TYPES[x.type]||'Not')+'</span>'+esc(x.text)+'</li>'});h+='</ul>'}
     box.innerHTML=h;var n=new Date();up.textContent='Önümüzdeki 14 gün · '+pad(n.getHours())+':'+pad(n.getMinutes())+' itibarıyla';
   }catch(e){}
 }
@@ -620,7 +620,7 @@ async function openMini(){
   var okDoc=false;
   if(w){try{
     w.document.open();
-    w.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>⭐ planda · önemli</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Figtree:wght@400;600;700&display=swap"><style>'+MINI_CSS+'</style></head><body><header><h1>⭐ Önemli işler</h1><p id="up"></p></header><main id="list"></main></body></html>');
+    w.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>⭐ plandan · önemli</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Figtree:wght@400;600;700&display=swap"><style>'+MINI_CSS+'</style></head><body><header><h1>⭐ Önemli işler</h1><p id="up"></p></header><main id="list"></main></body></html>');
     w.document.close();okDoc=true;
   }catch(e){try{w.close()}catch(_){}}}
   if(!w||!okDoc){
@@ -672,7 +672,7 @@ function renderShot(){
       '<label class="wide">Yer (isteğe bağlı)<input type="text" data-k="sh-place" maxlength="120" value="'+esc(d.yer)+'"></label>'+
       '<label class="wide">Detay (isteğe bağlı)<textarea data-k="sh-detail" rows="3" maxlength="1000">'+esc(d.detay)+'</textarea></label></div>'+
       '<p class="hint" style="margin-top:10px">Tarih boşsa kayıt “Yapmak istediklerim” listesine eklenir.</p>'+
-      '<div class="frow"><button class="btn" data-shot="save">Plandaya kaydet</button><button class="btn ghost" data-shot="close">Vazgeç</button></div>';
+      '<div class="frow"><button class="btn" data-shot="save">Plandan\'a kaydet</button><button class="btn ghost" data-shot="close">Vazgeç</button></div>';
   }
   shotBox(h);
   var root=document.getElementById('modal-root');

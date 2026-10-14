@@ -1,6 +1,6 @@
-# planda sitesi
+# plandan sitesi
 
-Bu klasör planda'nın bağımsız sürümüdür. Kayıtlar her tarayıcıda ayrı tutulur. Görselden ekleme özelliği, Netlify'da çalışan küçük bir sunucu fonksiyonu üzerinden çalışır.
+Bu klasör plandan'ın bağımsız sürümüdür. Kayıtlar her tarayıcıda ayrı tutulur. Görselden ekleme özelliği, Netlify'da çalışan küçük bir sunucu fonksiyonu üzerinden çalışır.
 
 ## Dosyalar
 
@@ -28,14 +28,14 @@ Bu klasör planda'nın bağımsız sürümüdür. Kayıtlar her tarayıcıda ayr
 
 **2. GitHub'a yükle**
 1. https://github.com adresinde hesap aç.
-2. "New repository" ile yeni bir depo oluştur, adı `planda` olsun.
+2. "New repository" ile yeni bir depo oluştur, adı `plandan` olsun.
 3. "uploading an existing file" bağlantısına tıkla.
 4. Bu klasördeki `index.html`, `netlify.toml`, `README.md` dosyalarını ve `netlify` klasörünü sürükle bırak.
 5. "Commit changes" düğmesine bas.
 
 **3. Netlify'a bağla**
 1. https://app.netlify.com adresinde "Add new site" > "Import an existing project" seç.
-2. GitHub'ı bağla ve `planda` deposunu seç.
+2. GitHub'ı bağla ve `plandan` deposunu seç.
 3. Ayarlara dokunma, "Deploy" de. Bu yeni bir link verir; eski `yourplanda` linki yerine bu linki kullanırsın.
 
 **4. Anahtar ve erişim kodunu ekle**
