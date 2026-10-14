@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#243B64">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="plandan">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>plandan · kişisel planlayıcı</title>
 <meta name="description" content="Günlük, haftalık ve aylık planın, ders programın, fikirlerin ve notların tek yerde.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -362,6 +369,8 @@ function errMsg(e){
   if(c==='quota_exceeded')return 'Depolama alanı doldu. Eski kayıtları silip yeniden dene.';
   if(c==='invalid_argument')return 'Bu bağlantıda kayıt yapma iznin yok ya da kayıt çok büyük.';
   if(c==='revoked')return 'Bu sayfaya erişimin kapatıldı.';
+  if(c==='conflict')return 'Bu planı başka bir cihazdan da değiştirdin. Son değişikliğini kopyala, sayfayı yenile ve tekrar yap.';
+  if(c==='signedout')return 'Oturumun sona erdi. Sayfayı yenileyip yeniden giriş yap.';
   return 'Bağlantı sorunu. Yazdıkların burada duruyor; yeniden deneyebilirsin.';
 }
 async function run(fn,onOk){
@@ -560,6 +569,8 @@ function render(){
   try{if(ak&&typeof a.selectionStart==='number')selr=[a.selectionStart,a.selectionEnd]}catch(e){}
   var m=q('.main'),st=m?m.scrollTop:0,ws=window.scrollY;
   if(S.phase==='connecting'){app.innerHTML='<div class="loading" style="grid-column:1/-1">Bağlanılıyor…</div>';return}
+  if(S.phase==='auth'){app.style.display='block';app.innerHTML=S.pendingCode?codeHTML():authHTML();return}
+  if(S.phase==='offline'){app.style.display='block';app.innerHTML=gate('Sunucuya bağlanılamadı','<p class="muted">'+esc(S.offlineErr||'İnternet bağlantını kontrol edip tekrar dene.')+'</p><div class="frow"><button class="btn" data-act="retry-open">Yeniden dene</button></div>');return}
   if(S.phase==='nodb'){app.style.display='block';app.innerHTML=gate('Planına bağlanılamadı','<p>Plandan kayıtlarını hesabında saklar. Bunun için sayfayı claude.ai üzerinden, giriş yapmış olarak aç.</p><p>Bağlantı bir başkasından geldiyse, sahibinden sana erişim vermesini iste.</p>');return}
   if(S.phase==='signedout'){app.style.display='block';app.innerHTML=gate('Giriş yapman gerekiyor','<p>Planın kendi hesabına bağlı tutulur, böylece yalnızca sen görürsün ve her cihazdan ulaşırsın.</p><p>claude.ai hesabınla giriş yapıp bu bağlantıyı yeniden aç.</p>');return}
   if(S.phase==='revoked'){app.style.display='block';app.innerHTML=gate('Erişim kapandı','<p>Bu sayfaya erişimin değişti. Sayfanın sahibiyle iletişime geç.</p>');return}
@@ -570,7 +581,7 @@ function render(){
   else if(S.failed)banner='<div class="banner err" role="alert"><span>'+esc(S.failed.msg)+'</span><button class="btn sm" data-act="retry">Yeniden dene</button></div>';
   else if(S.syncErr)banner='<div class="banner"><span>Canlı bağlantı koptu. Gösterilenler güncel olmayabilir.</span><button class="btn sm ghost" data-act="resync">Yeniden bağlan</button></div>';
   var body=S.phase==='loading'?'<p class="loading" style="padding:0">Planın yükleniyor…</p>':({day:dayV,week:weekV,month:monthV,courses:coursesV,ideas:ideasV,notebooks:notebooksV})[S.view]();
-  app.innerHTML=sideHTML()+'<main class="main" id="main"><header class="top"><h1>'+TITLES[S.view]+'</h1><div class="top-r"><span id="status" class="status"></span>'+lockBtn()+(S.shotOK?'<button class="btn ghost" data-act="shot-open">📷 Görselden ekle</button>':'')+'<button class="btn ghost" data-act="mini-open">⭐ Küçük pencere</button></div></header>'+banner+'<div class="view">'+body+'</div></main>';
+  app.innerHTML=sideHTML()+'<main class="main" id="main"><header class="top"><h1>'+TITLES[S.view]+'</h1><div class="top-r"><span id="status" class="status"></span>'+lockBtn()+(S.mode==='account'?'<button class="btn ghost" data-act="logout">Çıkış yap</button>':'')+(S.shotOK?'<button class="btn ghost" data-act="shot-open">📷 Görselden ekle</button>':'')+'<button class="btn ghost" data-act="mini-open">⭐ Küçük pencere</button></div></header>'+banner+'<div class="view">'+body+'</div></main>';
   Object.keys(keep).forEach(function(k){if(reset.has(k))return;var el=K(k);if(!el)return;if(el.type==='checkbox')el.checked=keep[k];else el.value=keep[k]});
   reset.clear();
   status();
@@ -975,7 +986,32 @@ var A={
   'lk-save':function(){saveLk()},
   'shot-open':function(){if(!S.shotOK){toast('Bu sayfada görselden ekleme kullanılamıyor.');return}openShot()},
   'retry':function(){var f=S.failed;if(f){S.failed=null;run(f.fn,f.onOk)}},
-  'resync':function(){subscribe();render()}
+  'resync':function(){subscribe();render()},
+  'auth-mode':function(el){S.authMode=el.dataset.mode;S.authErr='';S.authKeep={};render()},
+  'auth-submit':async function(){
+    var m=S.authMode||'login';
+    var u=(K('au-user')||{}).value||'',p=(K('au-pass')||{}).value||'',p2=(K('au-pass2')||{}).value||'',c=(K('au-code')||{}).value||'';
+    S.authKeep={u:u,c:c};
+    if(!u.trim()){S.authErr='Kullanıcı adını yaz.';render();return}
+    if(m==='register'&&p!==p2){S.authErr='İki şifre aynı değil.';render();return}
+    S.authBusy=true;S.authErr='';render();
+    try{
+      var j;
+      if(m==='login')j=await authCall({action:'login',username:u,password:p});
+      else if(m==='register')j=await authCall({action:'register',username:u,password:p});
+      else j=await authCall({action:'reset',username:u,recoveryCode:c,newPassword:p});
+      S.authBusy=false;S.authKeep={};
+      setToken(j.token);
+      if(j.recoveryCode){setPending(j.recoveryCode);S.pendingCode=j.recoveryCode;render();return}
+      await enterAccount();
+    }catch(e){S.authBusy=false;S.authErr=(e&&e.message)||'Bir sorun oldu, tekrar dene.';render()}
+  },
+  'auth-continue':async function(){setPending('');S.pendingCode=null;await enterAccount()},
+  'retry-open':async function(){S.offlineErr='';await enterAccount()},
+  'logout':async function(){
+    try{await fetch(API.auth,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+getToken()},body:JSON.stringify({action:'logout'})})}catch(e){}
+    setToken('');setPending('');location.reload();
+  }
 };
 document.addEventListener('click',function(e){
   if(e.target.closest('#modal-root'))return;
@@ -994,6 +1030,117 @@ window.addEventListener('beforeunload',function(e){if(S.dirty||S.failed){e.preve
 var lastDay=today();
 setInterval(function(){var t=today();if(t!==lastDay){lastDay=t;render()}},60000);
 
+/* ---------- hesap ve sunucu verisi ---------- */
+var API={auth:'/.netlify/functions/auth',data:'/.netlify/functions/data'};
+function getToken(){try{return localStorage.getItem('planda:session')||''}catch(e){return ''}}
+function setToken(t){try{if(t)localStorage.setItem('planda:session',t);else localStorage.removeItem('planda:session')}catch(e){}}
+function getPending(){try{return localStorage.getItem('planda:pendingcode')||''}catch(e){return ''}}
+function setPending(c){try{if(c)localStorage.setItem('planda:pendingcode',c);else localStorage.removeItem('planda:pendingcode')}catch(e){}}
+function legacyData(){var out={};COLS.forEach(function(c){try{out[c]=JSON.parse(localStorage.getItem('planda:v1:'+c)||'{}')||{}}catch(e){out[c]={}}});return out}
+async function api(url,opts){
+  opts=opts||{};
+  var h={'content-type':'application/json'},t=getToken();
+  if(t)h.authorization='Bearer '+t;
+  var r;
+  try{r=await fetch(url,{method:opts.method||'GET',headers:h,body:opts.body})}catch(e){throw {code:'unavailable'}}
+  var j={};try{j=await r.json()}catch(e){}
+  if(r.status===401)throw {code:'signedout'};
+  if(r.status===409)throw {code:'conflict'};
+  if(r.status===413)throw {code:'invalid_argument'};
+  if(r.status>=500)throw {code:'unavailable'};
+  if(!r.ok)throw {code:'http',message:j.error||''};
+  return j;
+}
+async function authCall(body){
+  var r;
+  try{r=await fetch(API.auth,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})}catch(e){throw {message:'Bağlantı yok. Tekrar dene.'}}
+  var j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw {message:j.error||'Bir sorun oldu, tekrar dene.'};
+  return j;
+}
+/* Sunucudaki plan, yerel depolamayla aynı arayüzle (collection/doc) kullanılır.
+   Her yazmadan sonra tüm plan sunucuya gönderilir; çakışma olursa kayıt reddedilir. */
+function remoteBase(initRev,initData){
+  var mem={},rev=initRev,queue=Promise.resolve(),subs={};
+  COLS.forEach(function(c){mem[c]=JSON.parse(JSON.stringify((initData&&initData[c])||{}))});
+  function persist(){
+    var p=queue.catch(function(){}).then(function(){
+      return api(API.data,{method:'PUT',body:JSON.stringify({baseRev:rev,data:mem})}).then(function(j){rev=j.rev});
+    });
+    queue=p;return p;
+  }
+  function emitTo(c,fn){
+    var o=mem[c]||{},docs=Object.keys(o).map(function(id){var body=o[id];return {id:id,exists:true,data:function(){return JSON.parse(JSON.stringify(body))}}});
+    fn({docs:docs,size:docs.length,empty:!docs.length,docChanges:function(){return []},metadata:{fromCache:false,hasPendingWrites:false}});
+  }
+  function emitAll(c){(subs[c]||[]).forEach(function(f){emitTo(c,f)})}
+  function colRef(c){
+    return {
+      path:c,
+      doc:function(id){
+        id=id||('l'+Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+        return {
+          id:id,path:c+'/'+id,
+          set:async function(d){mem[c][id]=JSON.parse(JSON.stringify(d));emitAll(c);await persist()},
+          update:async function(d){if(!mem[c][id])throw {code:'invalid_argument',message:'missing'};Object.assign(mem[c][id],JSON.parse(JSON.stringify(d)));emitAll(c);await persist()},
+          delete:async function(){delete mem[c][id];emitAll(c);await persist()}
+        };
+      },
+      onSnapshot:function(next){
+        subs[c]=subs[c]||[];subs[c].push(next);emitTo(c,next);
+        return function(){subs[c]=(subs[c]||[]).filter(function(f){return f!==next})};
+      }
+    };
+  }
+  return {collection:colRef,persistNow:persist};
+}
+async function openRemote(){
+  S.phase='connecting';render();
+  try{
+    var j=await api(API.data,{method:'GET'});
+    var data=j.data||{},rev=j.rev||0;
+    var hasRemote=COLS.some(function(c){return data[c]&&Object.keys(data[c]).length});
+    var legacy=legacyData();
+    var hasLegacy=COLS.some(function(c){return Object.keys(legacy[c]).length});
+    var migrate=!hasRemote&&hasLegacy&&rev===0;
+    base=remoteBase(rev,migrate?legacy:data);
+    S.mode='account';
+    if(migrate)await base.persistNow();
+    return true;
+  }catch(e){
+    base=null;
+    if(e&&e.code==='signedout'){setToken('');S.phase='auth';S.authErr='Oturumun sona ermiş. Yeniden giriş yap.';render();return false}
+    S.phase='offline';S.offlineErr='Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';render();return false;
+  }
+}
+async function enterAccount(){
+  if(!(await openRemote()))return;
+  S.phase='loading';render();subscribe();
+}
+var AUTH_TABS=[['login','Giriş yap'],['register','Kayıt ol'],['reset','Şifremi unuttum']];
+function authHTML(){
+  var m=S.authMode||'login',keep=S.authKeep||{};
+  var tabs='<div class="tabs" style="margin-bottom:14px">'+AUTH_TABS.map(function(t){return '<button class="tab'+(m===t[0]?' on':'')+'" data-act="auth-mode" data-mode="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
+  var f='<label>Kullanıcı adı<input type="text" data-k="au-user" value="'+esc(keep.u||'')+'" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20"></label>';
+  if(m==='reset'){
+    f+='<label>Kurtarma kodu<input type="text" data-k="au-code" value="'+esc(keep.c||'')+'" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX"></label>';
+    f+='<label>Yeni şifre<input type="password" data-k="au-pass" autocomplete="new-password" data-enter="auth-submit"></label>';
+  }else{
+    f+='<label>Şifre<input type="password" data-k="au-pass" autocomplete="'+(m==='register'?'new-password':'current-password')+'" data-enter="auth-submit"></label>';
+    if(m==='register')f+='<label>Şifre tekrar<input type="password" data-k="au-pass2" autocomplete="new-password" data-enter="auth-submit"></label>';
+  }
+  var btn={login:'Giriş yap',register:'Hesap oluştur',reset:'Şifreyi yenile'}[m];
+  var note=m==='reset'
+    ?'<p class="muted">Kayıt olurken sana verilen kurtarma kodunu gir. Yeni şifren hemen geçerli olur.</p>'
+    :'<p class="muted">Verilerin sunucuda, hesabına bağlı olarak saklanır. Şifren saklanmaz, ama sunucunun sahibi teknik olarak verileri okuyabilir.</p>';
+  return gate('Planına giriş',tabs+note+f+(S.authErr?'<p class="ferr" role="alert">'+esc(S.authErr)+'</p>':'')+'<div class="frow"><button class="btn" data-act="auth-submit"'+(S.authBusy?' disabled':'')+'>'+btn+'</button></div>');
+}
+function codeHTML(){
+  return gate('Kurtarma kodun','<p>Bu kodu bir yere kaydet. Şifreni unutursan yeni şifre belirlemek için bu kod gerekir. Kodu bir kez kaydedip "devam et" dersen bir daha gösterilmez.</p>'+
+    '<p style="font:600 20px ui-monospace,Menlo,monospace;letter-spacing:.06em;user-select:all;margin:14px 0">'+esc(S.pendingCode)+'</p>'+
+    '<div class="frow"><button class="btn" data-act="auth-continue">Kaydettim, devam et</button></div>');
+}
+
 /* ---------- başlat ---------- */
 (async function(){
   render();
@@ -1006,7 +1153,11 @@ setInterval(function(){var t=today();if(t!==lastDay){lastDay=t;render()}},60000)
     var can=null;try{can=await u.can('data.write')}catch(e){can=null}
     if(uid&&can!==false){db=d;base=db.doc('data/users/'+uid+'/planda');S.mode='cloud'}
   }
-  if(!base){S.mode='local';base=localBase()}
+  if(!base){
+    if(!getToken()){S.phase='auth';render();return}
+    if(getPending()){S.pendingCode=getPending();S.phase='auth';render();return}
+    if(!(await openRemote()))return;
+  }
   S.phase='loading';render();
   subscribe();
 })();

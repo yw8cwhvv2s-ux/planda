@@ -1,4 +1,4 @@
-// planda: görselden plan kaydı çıkaran sunucu fonksiyonu.
+// plandan: görselden plan kaydı çıkaran sunucu fonksiyonu.
 // Anahtar (ANTHROPIC_API_KEY) ve erişim kodu (ACCESS_CODE) yalnızca Netlify ortam
 // değişkenlerinde durur; tarayıcıya hiçbir zaman gönderilmez.
 const crypto = require('crypto');
