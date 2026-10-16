@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#243B64">
+<meta name="theme-color" content="#0F6B4F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="plandan">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,46 +14,46 @@
 <meta name="description" content="Günlük, haftalık ve aylık planın, ders programın, fikirlerin ve notların tek yerde.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#243B64;--bg:#F7F9FC;--surface:#FFFFFF;--ink:#1A2438;--muted:#5B6780;--line:#E1E6EF;--soft:#EEF2F8;
-  --accent:#243B64;--accent-ink:#FFFFFF;--accent-text:#243B64;
-  --side-bg:#243B64;--side-ink:#EEF2FA;--side-muted:#AFBCD6;--side-hover:rgba(255,255,255,.08);--side-active:rgba(255,255,255,.15);
-  --star:#B7791F;--danger:#B03A33;--ok:#2E7A57;--violet:#6A4FA3;
-  --shadow:0 1px 2px rgba(36,59,100,.06),0 4px 14px rgba(36,59,100,.05);
+  --navy:#0F6B4F;--bg:#F4F6F5;--surface:#FFFFFF;--ink:#111816;--muted:#5E6B66;--line:#E0E6E3;--soft:#EAF0ED;
+  --accent:#0F6B4F;--accent-ink:#FFFFFF;--accent-text:#0F6B4F;
+  --side-bg:#111816;--side-ink:#EEF3F1;--side-muted:#9AA8A2;--side-hover:rgba(255,255,255,.08);--side-active:rgba(255,255,255,.15);
+  --star:#0F6B4F;--danger:#B42318;--ok:#2E7A57;--violet:#6A4FA3;
+  --shadow:0 1px 2px rgba(17,24,22,.05),0 4px 14px rgba(17,24,22,.04);
   color-scheme:light;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E1524;--surface:#151F33;--ink:#E4EAF5;--muted:#97A3BA;--line:#26334C;--soft:#1B2740;
-  --accent:#4A6BA8;--accent-ink:#FFFFFF;--accent-text:#A5BDE8;
-  --side-bg:#111B2E;--side-ink:#DDE5F3;--side-muted:#8796B2;
-  --star:#E2A93B;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}}
+  --bg:#0C1210;--surface:#131C19;--ink:#E6EDEA;--muted:#93A39C;--line:#23302B;--soft:#18231F;
+  --accent:#2F9E7A;--accent-ink:#FFFFFF;--accent-text:#6FD3AE;
+  --side-bg:#0A0F0D;--side-ink:#E6EDEA;--side-muted:#7F8F88;
+  --star:#6FD3AE;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}}
 :root[data-theme="dark"]{
-  --bg:#0E1524;--surface:#151F33;--ink:#E4EAF5;--muted:#97A3BA;--line:#26334C;--soft:#1B2740;
-  --accent:#4A6BA8;--accent-ink:#FFFFFF;--accent-text:#A5BDE8;
-  --side-bg:#111B2E;--side-ink:#DDE5F3;--side-muted:#8796B2;
-  --star:#E2A93B;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}
+  --bg:#0C1210;--surface:#131C19;--ink:#E6EDEA;--muted:#93A39C;--line:#23302B;--soft:#18231F;
+  --accent:#2F9E7A;--accent-ink:#FFFFFF;--accent-text:#6FD3AE;
+  --side-bg:#0A0F0D;--side-ink:#E6EDEA;--side-muted:#7F8F88;
+  --star:#6FD3AE;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}
 *,*::before,*::after{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
-h1,h2,h3{font-family:"Inter",Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;margin:0}
+h1,h2,h3{font-family:"Manrope",Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;margin:0}
 p{margin:0}
 ul{list-style:none;margin:0;padding:0}
 
 #app{display:grid;grid-template-columns:264px minmax(0,1fr);height:100%}
 .side{background:var(--side-bg);color:var(--side-ink);display:flex;flex-direction:column;gap:22px;padding:24px 16px;overflow-y:auto}
-.logo{font-family:"Inter",sans-serif;font-weight:700;font-size:30px;letter-spacing:-.035em;line-height:1;padding:0 10px;display:flex;align-items:baseline;gap:3px}
-.logo i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#F2C46B;transform:translateY(-2px)}
+.logo{font-family:"Manrope",sans-serif;font-weight:700;font-size:30px;letter-spacing:-.035em;line-height:1;padding:0 10px;display:flex;align-items:baseline;gap:3px}
+.logo i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#6FD3AE;transform:translateY(-2px)}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav button{background:none;border:0;text-align:left;padding:9px 12px;border-radius:8px;color:var(--side-ink);font-weight:500;position:relative}
 .nav button:hover{background:var(--side-hover)}
 .nav button.on{background:var(--side-active);font-weight:600}
-.nav button.on::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:#F2C46B}
+.nav button.on::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:#6FD3AE}
 .wk{border-top:1px solid rgba(255,255,255,.12);padding-top:18px;display:flex;flex-direction:column;gap:8px}
 .wk-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-weight:600;font-size:14px}
 .wk-head button,.wk-this{background:none;border:0;color:var(--side-ink);width:30px;height:30px;border-radius:7px;font-size:18px;line-height:1}
@@ -65,7 +65,7 @@ ul{list-style:none;margin:0;padding:0}
 .wd .wd-s{display:none}
 .wd .wd-d{color:var(--side-muted);font-variant-numeric:tabular-nums}
 .wd.today .wd-n{font-weight:700}
-.wd.today .wd-d{color:#F2C46B;font-weight:600}
+.wd.today .wd-d{color:#6FD3AE;font-weight:600}
 .wd .wd-c{min-width:18px;text-align:right;font-size:12px;color:var(--side-muted)}
 .wk-this{width:auto;height:auto;font-size:13px;color:var(--side-muted);text-decoration:underline;text-underline-offset:3px;padding:2px 10px;align-self:flex-start}
 
@@ -152,7 +152,7 @@ label.chk input{width:16px;height:16px;accent-color:var(--accent)}
 .wcard.today{border:2px solid var(--accent);padding:11px}
 .wc-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
 .wc-h span:first-child{font-weight:600;font-size:14px}
-.wc-d{font-family:"Inter",sans-serif;font-size:22px;font-weight:700;line-height:1}
+.wc-d{font-family:"Manrope",sans-serif;font-size:22px;font-weight:700;line-height:1}
 .wc-c{font-size:12px;color:var(--accent-text);font-weight:600}
 .wcard li{font-size:13px;line-height:1.4;padding:5px 0;border-top:1px solid var(--line);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .wcard li.done{text-decoration:line-through;color:var(--muted)}
@@ -247,7 +247,7 @@ label.chk input{width:16px;height:16px;accent-color:var(--accent)}
   .nav{flex-direction:row;overflow-x:auto;gap:4px;margin:0 -14px;padding:0 14px;scrollbar-width:none}
   .nav::-webkit-scrollbar{display:none}
   .nav button{white-space:nowrap;padding:7px 12px;background:var(--side-hover)}
-  .nav button.on{background:#F2C46B;color:#1A2438}
+  .nav button.on{background:#E6EDEA;color:#111816}
   .nav button.on::before{display:none}
   .wk{padding-top:10px}
   .wk-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -451,7 +451,7 @@ function sideHTML(){
       '<span class="wd-n">'+DAYS[i]+'</span><span class="wd-s">'+DSHORT[i]+'</span><span class="wd-d">'+pd.getDate()+'<span class="wd-m"> '+MSHORT[pd.getMonth()]+'</span></span><span class="wd-c">'+(st?'📌':(es.length||''))+'</span></button>';}
   var navB=function(k){return '<button class="'+(S.view===k?'on':'')+'" data-act="nav" data-view="'+k+'"'+(S.view===k?' aria-current="page"':'')+'>'+TITLES[k]+'</button>'};
   var nav=['day','week'].map(navB).join('');
-  var nav2=['month','courses','ideas','notebooks','profile'].map(navB).join('');
+  var nav2=['month'].concat(showCourses()?['courses']:[],['ideas','notebooks','profile']).map(navB).join('');
   return '<aside class="side"><div class="brand"><span class="logo">plandan<i></i></span></div><nav class="nav" aria-label="Ana bölümler">'+nav+'</nav>'+
     '<div class="wk"><div class="wk-head"><button data-act="week-prev" aria-label="Önceki hafta">‹</button><span>'+rangeLabel(S.week)+'</span><button data-act="week-next" aria-label="Sonraki hafta">›</button></div>'+
     '<div class="wk-days">'+days+'</div>'+(S.week!==monday(t)?'<button class="wk-this" data-act="week-this">Bu haftaya dön</button>':'')+'</div><nav class="nav" aria-label="Diğer bölümler">'+nav2+'</nav></aside>';
@@ -478,7 +478,7 @@ function dayV(){
       '<div class="add-row"><select data-k="add-type" aria-label="Tür">'+typeOpts('not')+'</select><label class="chk"><input type="checkbox" data-k="add-star"> 📌 Önemli</label><span class="grow"></span><button class="btn" data-act="add-entry">Ekle</button></div></div>'+
       '<div class="progress"><span>'+(es.length?done+' / '+es.length+' tamamlandı':'Henüz kayıt yok')+'</span><div class="bar"><i style="width:'+(es.length?Math.round(done/es.length*100):0)+'%"></i></div></div>'+
       (es.length?'<ul class="entries">'+es.map(entryHTML).join('')+'</ul>':'<p class="empty">Yukarıya yazıp “Ekle”ye bas. Ctrl + Enter da çalışır.</p>')+
-    '</div><aside class="card"><h3>Bu günün dersleri</h3>'+lessons+'</aside></div>';
+    '</div>'+(showCourses()?'<aside class="card"><h3>Bu günün dersleri</h3>'+lessons+'</aside>':'')+'</div>';
 }
 function weekNav(){
   var t=monday(today());
@@ -541,6 +541,7 @@ function profileV(){
   return '<div class="card"><h2 style="margin:0 0 12px;font-size:1.05rem">Hesabın</h2>'+
     '<label>Adın<input type="text" data-k="profile-name" maxlength="60" value="'+esc(u.displayName||'')+'" placeholder="Adını yaz" aria-label="Adın"></label>'+
     '<div class="frow"><button class="btn" data-act="profile-save">Adımı kaydet</button></div>'+
+    '<label style="display:block;margin-top:16px">Bu hesabı ne için kullanıyorsun?<select data-k="profile-role" aria-label="Kullanım amacı">'+roleOpts(userRole(),false)+'</select></label><div class="frow"><button class="btn" data-act="profile-role-save">Amacı kaydet</button></div>'+
     '<p class="muted" style="margin:14px 0 0">E-posta: '+esc(u.email||'')+'</p>'+
     '<div class="frow"><button class="btn ghost" data-act="profile-pw">Şifremi değiştir (e-posta gönder)</button><button class="btn ghost" data-act="logout">Çıkış yap</button></div></div>';
 }
@@ -618,10 +619,10 @@ function miniListHTML(){
     h+='<li data-date="'+x.date+'" tabindex="0" title="Plandan\'da aç"><span class="tag t-'+esc(x.type)+'">'+(TYPES[x.type]||'Not')+'</span> '+esc(x.text)+'</li>'});
   return '<ul class="mini-list">'+h+'</ul>';
 }
-var MINI_CSS='*{box-sizing:border-box}body{margin:0;font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#F7F9FC;color:#1A2438}'+
- 'header{background:#243B64;color:#fff;padding:14px 16px}h1{font:700 18px "Inter",Inter,sans-serif;margin:0}header p{margin:2px 0 0;font-size:12px;color:#C3CEE4}'+
- 'main{padding:6px 16px 20px}ul{list-style:none;margin:0;padding:0}.day{font-size:12px;font-weight:700;color:#243B64;margin:14px 0 4px}'+
- '.it{background:#fff;border:1px solid #E1E6EF;border-left:3px solid #B7791F;border-radius:8px;padding:9px 11px;margin-bottom:6px;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}.it:hover{border-color:#243B64}'+
+var MINI_CSS='*{box-sizing:border-box}body{margin:0;font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#F4F6F5;color:#111816}'+
+ 'header{background:#0F6B4F;color:#fff;padding:14px 16px}h1{font:700 18px "Manrope",Inter,sans-serif;margin:0}header p{margin:2px 0 0;font-size:12px;color:#CDE7DD}'+
+ 'main{padding:6px 16px 20px}ul{list-style:none;margin:0;padding:0}.day{font-size:12px;font-weight:700;color:#0F6B4F;margin:14px 0 4px}'+
+ '.it{background:#fff;border:1px solid #E0E6E3;border-left:3px solid #0F6B4F;border-radius:8px;padding:9px 11px;margin-bottom:6px;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}.it:hover{border-color:#0F6B4F}'+
  '.tag{font-size:11px;font-weight:600;color:#5B6780;display:block}.empty{color:#5B6780;margin-top:18px}'+
  '@media (prefers-color-scheme:dark){body{background:#0E1524;color:#E4EAF5}header{background:#111B2E}.day{color:#A5BDE8}.it{background:#151F33;border-color:#26334C;border-left-color:#E2A93B}.tag,.empty{color:#97A3BA}}';
 function renderMini(){
@@ -644,7 +645,7 @@ async function openMini(){
   var okDoc=false;
   if(w){try{
     w.document.open();
-    w.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>📌 plandan · önemli</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"><style>'+MINI_CSS+'</style></head><body><header><h1>📌 Önemli işler</h1><p id="up"></p></header><main id="list"></main></body></html>');
+    w.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>📌 plandan · önemli</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700&family=Inter:wght@400;600;700&display=swap"><style>'+MINI_CSS+'</style></head><body><header><h1>📌 Önemli işler</h1><p id="up"></p></header><main id="list"></main></body></html>');
     w.document.close();okDoc=true;
   }catch(e){try{w.close()}catch(_){}}}
   if(!w||!okDoc){
@@ -835,6 +836,9 @@ document.addEventListener('keydown',function(e){
 /* ---------- plan kilidi ---------- */
 var SL={open:false,mode:'menu',err:''};
 function lockDoc(){var l=(S.settings||[]).find(function(x){return x.id==='lock'});return l&&l.salt?l:null}
+function userRole(){var r=(S.settings||[]).find(function(x){return x.id==='profile'});return r?r.role:''}
+function showCourses(){return userRole()!=='work'}
+function roleOpts(sel,blank){return (blank?'<option value="">Seç</option>':'')+[['student','Öğrenci'],['work','Çalışan (beyaz yaka)'],['other','Diğer']].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===sel?' selected':'')+'>'+o[1]+'</option>'}).join('')}
 function lockBtn(){return '<button class="btn ghost" data-act="lock-menu">🔒 Kilit</button>'}
 function b64e(u8){var s='';for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return btoa(s)}
 function b64d(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
@@ -923,6 +927,10 @@ document.addEventListener('keydown',function(e){
 
 /* ---------- eylemler ---------- */
 var A={
+  'profile-role-save':async function(){
+    var r=(K('profile-role')||{}).value||'other';
+    run(function(){return col('settings').doc('profile').set({role:r})},function(){toast('Kullanım amacın kaydedildi');render()});
+  },
   'profile-save':async function(){
     var u=fbAuth&&fbAuth.currentUser;if(!u)return;
     var name=(val('profile-name')||'').trim().slice(0,60);
@@ -1025,11 +1033,13 @@ var A={
     if(m==='register'){
       if(p.length<8){S.authErr='Şifre en az 8 karakter olmalı.';render();return}
       if(p!==p2){S.authErr='İki şifre aynı değil.';render();return}
+      var role=(K('au-role')||{}).value||'';if(!role){S.authErr='Kullanım amacını seç.';render();return}
     }
     S.authBusy=true;S.authErr='';render();
     try{
       if(m==='register'){
         var cred=await fbAuth.createUserWithEmailAndPassword(e,p);
+        try{localStorage.setItem('planda:role:'+cred.user.uid,role)}catch(x){}
         await cred.user.sendEmailVerification();
       }else{
         await fbAuth.signInWithEmailAndPassword(e,p);
@@ -1154,6 +1164,8 @@ async function enterAccount(user){
       await importLegacy(root,legacy);
       try{localStorage.setItem(flag,'1')}catch(e){}
     }
+    var pr=null;try{pr=localStorage.getItem('planda:role:'+user.uid)}catch(x){}
+    if(pr){var hp=await root.collection('settings').doc('profile').get();if(!hp.exists){await root.collection('settings').doc('profile').set({role:pr})}try{localStorage.removeItem('planda:role:'+user.uid)}catch(x){}}
     base=fireBase(user.uid);S.mode='account';
   }catch(e){
     base=null;openUid=null;
@@ -1202,6 +1214,7 @@ function authHTML(){
   var f='<label>E-posta<input type="email" data-k="au-email" value="'+esc(keep.e||'')+'" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false"'+(m==='reset'?' data-enter="auth-submit"':'')+'></label>';
   if(m!=='reset')f+='<label>Şifre<input type="password" data-k="au-pass" autocomplete="'+(m==='register'?'new-password':'current-password')+'" data-enter="auth-submit"></label>';
   if(m==='register')f+='<label>Şifre tekrar<input type="password" data-k="au-pass2" autocomplete="new-password" data-enter="auth-submit"></label>';
+  if(m==='register')f+='<label>Bu hesabı ne için kullanacaksın?<select data-k="au-role" aria-label="Kullanım amacı">'+roleOpts('',true)+'</select></label>';
   var btn={login:'Giriş yap',register:'Hesap oluştur',reset:'Bağlantı gönder'}[m];
   var note={login:'',register:'<p class="muted">Kayıt olunca e-postana bir doğrulama bağlantısı gelecek. Ona tıklamadan giriş yapamazsın. Verilerin hesabına bağlı olarak saklanır, proje sahibi teknik olarak erişebilir.</p>',reset:'<p class="muted">E-postana şifreni yenileyeceğin bir bağlantı göndereceğiz.</p>'}[m];
   var err=S.authErr?'<p class="ferr" role="alert">'+esc(S.authErr)+'</p>':'';
