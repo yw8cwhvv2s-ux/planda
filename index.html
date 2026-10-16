@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0F6B4F">
+<meta name="theme-color" content="#26282C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="plandan">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,24 +17,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#0F6B4F;--bg:#F4F6F5;--surface:#FFFFFF;--ink:#111816;--muted:#5E6B66;--line:#E0E6E3;--soft:#EAF0ED;
-  --accent:#0F6B4F;--accent-ink:#FFFFFF;--accent-text:#0F6B4F;
-  --side-bg:#111816;--side-ink:#EEF3F1;--side-muted:#9AA8A2;--side-hover:rgba(255,255,255,.08);--side-active:rgba(255,255,255,.15);
-  --star:#0F6B4F;--danger:#B42318;--ok:#2E7A57;--violet:#6A4FA3;
-  --shadow:0 1px 2px rgba(17,24,22,.05),0 4px 14px rgba(17,24,22,.04);
+  --navy:#26282C;--bg:#F7F4F0;--surface:#FFFFFF;--ink:#303236;--muted:#7A726B;--line:#E4DDD5;--soft:#EEE3DA;
+  --accent:#B78B72;--accent-ink:#FFFFFF;--accent-text:#8E6850;
+  --side-bg:#26282C;--side-ink:#F7F4F0;--side-muted:#A39B93;--side-hover:rgba(255,255,255,.08);--side-active:rgba(255,255,255,.15);
+  --star:#B78B72;--danger:#B42318;--ok:#2E7A57;--violet:#6A4FA3;
+  --shadow:0 1px 2px rgba(38,40,44,.05),0 4px 14px rgba(38,40,44,.05);
   color-scheme:light;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0C1210;--surface:#131C19;--ink:#E6EDEA;--muted:#93A39C;--line:#23302B;--soft:#18231F;
-  --accent:#2F9E7A;--accent-ink:#FFFFFF;--accent-text:#6FD3AE;
-  --side-bg:#0A0F0D;--side-ink:#E6EDEA;--side-muted:#7F8F88;
-  --star:#6FD3AE;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}}
+  --bg:#1A1B1E;--surface:#222428;--ink:#EEE9E3;--muted:#A39B93;--line:#34363B;--soft:#2C2E33;
+  --accent:#B78B72;--accent-ink:#FFFFFF;--accent-text:#D2A88F;
+  --side-bg:#141517;--side-ink:#F7F4F0;--side-muted:#8F8880;
+  --star:#D2A88F;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}}
 :root[data-theme="dark"]{
-  --bg:#0C1210;--surface:#131C19;--ink:#E6EDEA;--muted:#93A39C;--line:#23302B;--soft:#18231F;
-  --accent:#2F9E7A;--accent-ink:#FFFFFF;--accent-text:#6FD3AE;
-  --side-bg:#0A0F0D;--side-ink:#E6EDEA;--side-muted:#7F8F88;
-  --star:#6FD3AE;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}
+  --bg:#1A1B1E;--surface:#222428;--ink:#EEE9E3;--muted:#A39B93;--line:#34363B;--soft:#2C2E33;
+  --accent:#B78B72;--accent-ink:#FFFFFF;--accent-text:#D2A88F;
+  --side-bg:#141517;--side-ink:#F7F4F0;--side-muted:#8F8880;
+  --star:#D2A88F;--danger:#E37A72;--ok:#62C093;--violet:#B19BE0;--shadow:none;color-scheme:dark;}
 *,*::before,*::after{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
@@ -48,12 +48,13 @@ ul{list-style:none;margin:0;padding:0}
 #app{display:grid;grid-template-columns:264px minmax(0,1fr);height:100%}
 .side{background:var(--side-bg);color:var(--side-ink);display:flex;flex-direction:column;gap:22px;padding:24px 16px;overflow-y:auto}
 .logo{font-family:"Manrope",sans-serif;font-weight:700;font-size:30px;letter-spacing:-.035em;line-height:1;padding:0 10px;display:flex;align-items:baseline;gap:3px}
-.logo i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#6FD3AE;transform:translateY(-2px)}
+.slogan{display:block;font-size:12px;color:#C9A088;padding:4px 10px 0;letter-spacing:.01em;white-space:nowrap}
+.logo i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C9A088;transform:translateY(-2px)}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav button{background:none;border:0;text-align:left;padding:9px 12px;border-radius:8px;color:var(--side-ink);font-weight:500;position:relative}
 .nav button:hover{background:var(--side-hover)}
 .nav button.on{background:var(--side-active);font-weight:600}
-.nav button.on::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:#6FD3AE}
+.nav button.on::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:#C9A088}
 .wk{border-top:1px solid rgba(255,255,255,.12);padding-top:18px;display:flex;flex-direction:column;gap:8px}
 .wk-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-weight:600;font-size:14px}
 .wk-head button,.wk-this{background:none;border:0;color:var(--side-ink);width:30px;height:30px;border-radius:7px;font-size:18px;line-height:1}
@@ -65,7 +66,7 @@ ul{list-style:none;margin:0;padding:0}
 .wd .wd-s{display:none}
 .wd .wd-d{color:var(--side-muted);font-variant-numeric:tabular-nums}
 .wd.today .wd-n{font-weight:700}
-.wd.today .wd-d{color:#6FD3AE;font-weight:600}
+.wd.today .wd-d{color:#C9A088;font-weight:600}
 .wd .wd-c{min-width:18px;text-align:right;font-size:12px;color:var(--side-muted)}
 .wk-this{width:auto;height:auto;font-size:13px;color:var(--side-muted);text-decoration:underline;text-underline-offset:3px;padding:2px 10px;align-self:flex-start}
 
@@ -452,7 +453,7 @@ function sideHTML(){
   var navB=function(k){return '<button class="'+(S.view===k?'on':'')+'" data-act="nav" data-view="'+k+'"'+(S.view===k?' aria-current="page"':'')+'>'+TITLES[k]+'</button>'};
   var nav=['day','week'].map(navB).join('');
   var nav2=['month'].concat(showCourses()?['courses']:[],['ideas','notebooks','profile']).map(navB).join('');
-  return '<aside class="side"><div class="brand"><span class="logo">plandan<i></i></span></div><nav class="nav" aria-label="Ana bölümler">'+nav+'</nav>'+
+  return '<aside class="side"><div class="brand"><span class="logo">plandan<i></i></span><span class="slogan">Günün ritmi sende.</span></div><nav class="nav" aria-label="Ana bölümler">'+nav+'</nav>'+
     '<div class="wk"><div class="wk-head"><button data-act="week-prev" aria-label="Önceki hafta">‹</button><span>'+rangeLabel(S.week)+'</span><button data-act="week-next" aria-label="Sonraki hafta">›</button></div>'+
     '<div class="wk-days">'+days+'</div>'+(S.week!==monday(t)?'<button class="wk-this" data-act="week-this">Bu haftaya dön</button>':'')+'</div><nav class="nav" aria-label="Diğer bölümler">'+nav2+'</nav></aside>';
 }
@@ -489,7 +490,7 @@ function weekV(){
   for(var i=0;i<7;i++){var d=addDays(S.week,i),es=entriesOn(d),cs=coursesOn(i);
     h+='<div class="wcard'+(d===t?' today':'')+'" role="button" tabindex="0" data-act="open-day" data-date="'+d+'" aria-label="'+DAYS[i]+' '+dm(d)+', '+es.length+' kayıt">'+
       '<div class="wc-h"><span>'+DAYS[i]+'</span><span class="wc-d">'+parse(d).getDate()+'</span></div>'+
-      (cs.length?'<p class="wc-c">'+cs.length+' ders</p>':'')+
+      ((cs.length&&showCourses())?'<p class="wc-c">'+cs.length+' ders</p>':'')+
       (es.length?'<ul>'+es.map(function(e){return '<li class="'+(e.done?'done':'')+'">'+(e.starred?'📌 ':'')+esc(e.text)+'</li>'}).join('')+'</ul>':'<p class="empty">Boş</p>')+'</div>';}
   return weekNav()+'<div class="weekgrid">'+h+'</div>';
 }
@@ -619,12 +620,12 @@ function miniListHTML(){
     h+='<li data-date="'+x.date+'" tabindex="0" title="Plandan\'da aç"><span class="tag t-'+esc(x.type)+'">'+(TYPES[x.type]||'Not')+'</span> '+esc(x.text)+'</li>'});
   return '<ul class="mini-list">'+h+'</ul>';
 }
-var MINI_CSS='*{box-sizing:border-box}body{margin:0;font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#F4F6F5;color:#111816}'+
- 'header{background:#0F6B4F;color:#fff;padding:14px 16px}h1{font:700 18px "Manrope",Inter,sans-serif;margin:0}header p{margin:2px 0 0;font-size:12px;color:#CDE7DD}'+
- 'main{padding:6px 16px 20px}ul{list-style:none;margin:0;padding:0}.day{font-size:12px;font-weight:700;color:#0F6B4F;margin:14px 0 4px}'+
- '.it{background:#fff;border:1px solid #E0E6E3;border-left:3px solid #0F6B4F;border-radius:8px;padding:9px 11px;margin-bottom:6px;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}.it:hover{border-color:#0F6B4F}'+
- '.tag{font-size:11px;font-weight:600;color:#5B6780;display:block}.empty{color:#5B6780;margin-top:18px}'+
- '@media (prefers-color-scheme:dark){body{background:#0E1524;color:#E4EAF5}header{background:#111B2E}.day{color:#A5BDE8}.it{background:#151F33;border-color:#26334C;border-left-color:#E2A93B}.tag,.empty{color:#97A3BA}}';
+var MINI_CSS='*{box-sizing:border-box}body{margin:0;font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#F7F4F0;color:#303236}'+
+ 'header{background:#26282C;color:#F7F4F0;padding:14px 16px}h1{font:700 18px "Manrope",Inter,sans-serif;margin:0}header p{margin:2px 0 0;font-size:12px;color:#D9CBBF}'+
+ 'main{padding:6px 16px 20px}ul{list-style:none;margin:0;padding:0}.day{font-size:12px;font-weight:700;color:#8E6850;margin:14px 0 4px}'+
+ '.it{background:#fff;border:1px solid #E4DDD5;border-left:3px solid #B78B72;border-radius:8px;padding:9px 11px;margin-bottom:6px;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}.it:hover{border-color:#B78B72}'+
+ '.tag{font-size:11px;font-weight:600;color:#7A726B;display:block}.empty{color:#7A726B;margin-top:18px}'+
+ '@media (prefers-color-scheme:dark){body{background:#1A1B1E;color:#EEE9E3}header{background:#141517}.day{color:#D2A88F}.it{background:#222428;border-color:#34363B;border-left-color:#C9A088}.tag,.empty{color:#A39B93}}';
 function renderMini(){
   if(!mini)return;
   if(mini.closed){mini=null;clearInterval(miniTimer);return}
@@ -838,7 +839,7 @@ var SL={open:false,mode:'menu',err:''};
 function lockDoc(){var l=(S.settings||[]).find(function(x){return x.id==='lock'});return l&&l.salt?l:null}
 function userRole(){var r=(S.settings||[]).find(function(x){return x.id==='profile'});return r?r.role:''}
 function showCourses(){return userRole()!=='work'}
-function roleOpts(sel,blank){return (blank?'<option value="">Seç</option>':'')+[['student','Öğrenci'],['work','Çalışan (beyaz yaka)'],['other','Diğer']].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===sel?' selected':'')+'>'+o[1]+'</option>'}).join('')}
+function roleOpts(sel,blank){return (blank?'<option value="">Seç</option>':'')+[['student','Okul'],['work','İş'],['other','Diğer']].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===sel?' selected':'')+'>'+o[1]+'</option>'}).join('')}
 function lockBtn(){return '<button class="btn ghost" data-act="lock-menu">🔒 Kilit</button>'}
 function b64e(u8){var s='';for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return btoa(s)}
 function b64d(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
