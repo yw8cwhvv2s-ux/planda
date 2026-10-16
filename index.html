@@ -536,8 +536,111 @@ function ideasV(){
 }
 function activeNbId(){var nbs=S.notebooks.slice().sort(function(a,b){return (a.createdAt||0)-(b.createdAt||0)});
   if(nbs.some(function(n){return n.id===S.activeNb}))return S.activeNb;return nbs.length?nbs[0].id:null}
-function profileV(){
+// ---- İçe aktar (.ics takvim dosyası) ----
+function dnum(ymd){var p=ymd.split('-');return Math.round(Date.UTC(+p[0],+p[1]-1,+p[2])/86400000)}
+function dfrom(n){var d=new Date(n*86400000);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
+function icsUnfold(t){var out=[];t.split(/\r?\n/).forEach(function(l){if((l.charAt(0)===' '||l.charAt(0)==='\t')&&out.length)out[out.length-1]+=l.slice(1);else out.push(l)});return out}
+function icsProp(line){var i=line.indexOf(':');if(i<0)return null;var parts=line.slice(0,i).split(';'),params={};parts.slice(1).forEach(function(x){var j=x.indexOf('=');if(j>0)params[x.slice(0,j).toUpperCase()]=x.slice(j+1)});return {name:parts[0].toUpperCase(),params:params,value:line.slice(i+1)}}
+function icsUnesc(s){return String(s||'').replace(/\\n/gi,'\n').replace(/\\([,;\\])/g,'$1')}
+function icsDate(v){
+  var m=/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/.exec(String(v||'').trim());
+  if(!m)return null;
+  var ymd=m[1]+'-'+m[2]+'-'+m[3];
+  if(!m[4])return {ymd:ymd,hm:'',allDay:true};
+  if(m[7]==='Z'){var d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0)));return {ymd:iso(d),hm:pad(d.getHours())+':'+pad(d.getMinutes()),allDay:false}}
+  return {ymd:ymd,hm:m[4]+':'+m[5],allDay:false};
+}
+function icsOccur(startYmd,rrule,ex,lo,hi){
+  var base=dnum(startYmd),L=dnum(lo),H=dnum(hi),out=[],r={};
+  (rrule||'').split(';').forEach(function(x){var j=x.indexOf('=');if(j>0)r[x.slice(0,j).toUpperCase()]=x.slice(j+1)});
+  if(!r.FREQ){if(!ex[startYmd]&&base>=L&&base<=H)out.push(startYmd);return out}
+  var freq=r.FREQ,iv=Math.max(1,parseInt(r.INTERVAL||'1',10)||1),count=r.COUNT?parseInt(r.COUNT,10):0,
+      until=r.UNTIL?dnum(r.UNTIL.slice(0,4)+'-'+r.UNTIL.slice(4,6)+'-'+r.UNTIL.slice(6,8)):Infinity,
+      by=r.BYDAY?r.BYDAY.split(',').map(function(x){return x.slice(-2)}):null,
+      codes=['SU','MO','TU','WE','TH','FR','SA'],sd=new Date(base*86400000),end=Math.min(H,until),n=0;
+  for(var c=base;c<=end&&c-base<8000;c++){
+    var cd=new Date(c*86400000),q=false;
+    if(freq==='DAILY')q=(c-base)%iv===0;
+    else if(freq==='WEEKLY'){var wk=Math.floor((c+3)/7)-Math.floor((base+3)/7);q=(wk%iv===0)&&(by?by.indexOf(codes[cd.getUTCDay()])>=0:cd.getUTCDay()===sd.getUTCDay())}
+    else if(freq==='MONTHLY'){var md=(cd.getUTCFullYear()-sd.getUTCFullYear())*12+cd.getUTCMonth()-sd.getUTCMonth();q=md%iv===0&&cd.getUTCDate()===sd.getUTCDate()}
+    else if(freq==='YEARLY'){q=(cd.getUTCFullYear()-sd.getUTCFullYear())%iv===0&&cd.getUTCMonth()===sd.getUTCMonth()&&cd.getUTCDate()===sd.getUTCDate()}
+    if(!q)continue;
+    n++;if(count&&n>count)break;
+    var ys=dfrom(c);if(c>=L&&c<=H&&!ex[ys])out.push(ys);
+  }
+  return out;
+}
+function icsParse(text){
+  var evs=[],cur=null;
+  icsUnfold(text).forEach(function(l){
+    if(l==='BEGIN:VEVENT'){cur={ex:{}};return}
+    if(l==='END:VEVENT'){if(cur)evs.push(cur);cur=null;return}
+    if(!cur)return;
+    var p=icsProp(l);if(!p)return;
+    if(p.name==='DTSTART')cur.start=icsDate(p.value);
+    else if(p.name==='DTEND')cur.end=icsDate(p.value);
+    else if(p.name==='SUMMARY')cur.summary=icsUnesc(p.value);
+    else if(p.name==='LOCATION')cur.place=icsUnesc(p.value);
+    else if(p.name==='DESCRIPTION')cur.detail=icsUnesc(p.value);
+    else if(p.name==='RRULE')cur.rrule=p.value;
+    else if(p.name==='EXDATE')p.value.split(',').forEach(function(v){var d=icsDate(v);if(d)cur.ex[d.ymd]=true});
+    else if(p.name==='STATUS')cur.status=String(p.value).toUpperCase();
+    else if(p.name==='UID')cur.uid=p.value;
+  });
+  return evs;
+}
+function icsToItems(text){
+  var now=today(),lo=addDays(now,-30),hi=addDays(now,365),items=[],dup=0,seen={},existing={};
+  S.entries.forEach(function(e){if(e.src)existing[e.src]=true});
+  icsParse(text).forEach(function(ev){
+    if(!ev.start||ev.status==='CANCELLED')return;
+    var title=(ev.summary||'(başlıksız etkinlik)').slice(0,140);
+    var times=ev.start.hm?(ev.start.hm+(ev.end&&ev.end.hm?'–'+ev.end.hm:'')):'';
+    icsOccur(ev.start.ymd,ev.rrule||'',ev.ex,lo,hi).forEach(function(ymd){
+      var key='ics:'+(ev.uid||title)+'|'+ymd;
+      if(existing[key]||seen[key]){dup++;return}
+      seen[key]=true;
+      var lines=[title];
+      if(times)lines.push('Saat: '+times);
+      if(ev.place)lines.push('Yer: '+ev.place.slice(0,120));
+      if(ev.detail)lines.push(ev.detail.slice(0,600));
+      items.push({date:ymd,text:lines.join('\n').slice(0,1000),src:key,title:title,times:times});
+    });
+  });
+  items.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
+  return {items:items.slice(0,600),dup:dup,over:items.length>600};
+}
+function importPick(f){
+  if(!f)return;
+  if(f.size>3000000){S.imp=null;S.impErr='Dosya 3 MB’tan büyük. Takvimini daha küçük parçalara ayırıp tekrar dene.';render();return}
+  var r=new FileReader();
+  r.onload=function(){
+    try{var res=icsToItems(String(r.result||''));S.impErr='';S.imp={name:f.name,items:res.items,dup:res.dup,over:res.over}}
+    catch(e){S.imp=null;S.impErr='Dosya okunamadı. .ics dosyası olduğundan emin ol.'}
+    render();
+  };
+  r.onerror=function(){S.imp=null;S.impErr='Dosya okunamadı.';render()};
+  r.readAsText(f);
+}
+function importCard(){
+  var I=S.imp,h='<div class="card" style="margin-top:14px"><h2 style="margin:0 0 6px;font-size:1.05rem">Başka uygulamadan içe aktar</h2>'+
+    '<p class="muted" style="margin:0 0 12px">Takvim uygulamanın dışa aktarma özelliğiyle bir <b>.ics</b> dosyası indir, sonra buradan seç. Bugünden 1 ay öncesi ile 1 yıl sonrası arasındaki etkinlikler “Not” olarak plana eklenir. Aynı dosyayı tekrar yüklersen mükerrer kayıt oluşmaz.</p>'+
+    '<label>Takvim dosyası (.ics)<input type="file" id="imp-file" accept=".ics,text/calendar"></label>';
+  if(S.impErr)h+='<p style="color:var(--danger);margin:10px 0 0">'+esc(S.impErr)+'</p>';
+  if(I){
+    h+='<div style="margin-top:14px"><b>'+esc(I.name)+'</b>: '+I.items.length+' yeni etkinlik bulundu'+(I.dup?' ('+I.dup+' tanesi zaten ekli, atlanacak)':'')+'.';
+    if(!I.items.length)h+=' Eklenecek yeni bir şey yok.';
+    if(I.over)h+=' İlk 600 tanesi alınacak.';
+    I.items.slice(0,6).forEach(function(x){h+='<div class="muted" style="margin-top:6px">'+esc(x.date)+' · '+esc(x.title)+(x.times?' · '+esc(x.times):'')+'</div>'});
+    if(I.items.length>6)h+='<div class="muted" style="margin-top:6px">…ve '+(I.items.length-6)+' tane daha</div>';
+    h+='</div><div class="frow"><button class="btn" data-act="import-run"'+(I.items.length?'':' disabled')+'>'+I.items.length+' etkinliği ekle</button><button class="btn ghost" data-act="import-cancel">Vazgeç</button></div>';
+  }
+  return h+'</div>';
+}
+function profileV(){return profileBase()+(S.mode==='account'?importCard():'')}
+function profileBase(){
   var u=fbAuth&&fbAuth.currentUser;
+
   if(S.mode!=='account'||!u)return '<div class="card"><p class="muted">Profilini görmek için hesabınla giriş yap.</p></div>';
   return '<div class="card"><h2 style="margin:0 0 12px;font-size:1.05rem">Hesabın</h2>'+
     '<label>Adın<input type="text" data-k="profile-name" maxlength="60" value="'+esc(u.displayName||'')+'" placeholder="Adını yaz" aria-label="Adın"></label>'+
@@ -928,6 +1031,16 @@ document.addEventListener('keydown',function(e){
 
 /* ---------- eylemler ---------- */
 var A={
+  'import-run':async function(){
+    var I=S.imp;if(!I||!I.items.length||S.mode!=='account')return;
+    var ok=await ask({title:I.items.length+' etkinlik eklensin mi?',text:'Etkinlikler “Not” türünde, ilgili günlere eklenecek. Sonradan düzenleyip silebilirsin.',ok:'Ekle'});
+    if(!ok)return;
+    try{
+      await Promise.all(I.items.map(function(x){return col('entries').doc().set({date:x.date,type:'not',text:x.text,starred:false,done:false,src:x.src,createdAt:Date.now()})}));
+      S.imp=null;S.impErr='';S.view='month';render();toast(I.items.length+' etkinlik eklendi');
+    }catch(e){S.impErr='Eklenemedi ('+((e&&e.code)||'bilinmeyen hata')+'). Tekrar dene.';render()}
+  },
+  'import-cancel':function(){S.imp=null;S.impErr='';render()},
   'profile-role-save':async function(){
     var r=(K('profile-role')||{}).value||'other';
     run(function(){return col('settings').doc('profile').set({role:r})},function(){toast('Kullanım amacın kaydedildi');render()});
@@ -1096,6 +1209,7 @@ document.addEventListener('keydown',function(e){
 });
 document.addEventListener('input',function(e){var k=e.target.dataset&&e.target.dataset.k;if(k&&k.indexOf('ed-')===0&&!S.dirty){S.dirty=true;var h=q('.editor .frow');if(h&&!h.querySelector('.hint'))h.insertAdjacentHTML('beforeend','<span class="hint">Kaydedilmemiş değişiklik var</span>')}});
 document.addEventListener('change',function(e){var k=e.target.dataset&&e.target.dataset.k;if(k==='ed-cat')S.dirty=true});
+document.addEventListener('change',function(e){if(e.target&&e.target.id==='imp-file')importPick(e.target.files&&e.target.files[0])});
 window.addEventListener('beforeunload',function(e){if(S.dirty||S.failed){e.preventDefault();e.returnValue=''}});
 var lastDay=today();
 setInterval(function(){var t=today();if(t!==lastDay){lastDay=t;render()}},60000);
